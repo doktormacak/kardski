@@ -2,6 +2,7 @@ import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
+import { LoadingPage } from "~/components/loading";
 
 
 import { api } from "~/utils/api";
@@ -19,6 +20,22 @@ const PostView = (props: PostWithUser) => {
     </div>
   );
 };
+
+const Feed = () => {
+  const { data, isLoading: postsLoading } = api.posts.getAll.useQuery();
+
+  if (postsLoading) return <LoadingPage />;
+
+  if (!data) return <div>Something went wrong</div>;
+
+  return (
+    <div className="flex flex-col">
+      {[...data, ...data]?.map((fullPost) => (
+          <PostView {...fullPost} key={fullPost.post.id} />
+        ))}
+    </div>
+  );
+}
 
 const CreatePostWizard = () => {
   const { user } = useUser();
@@ -44,13 +61,13 @@ const CreatePostWizard = () => {
 };
 
 const Home: NextPage = () => {
-  const user = useUser();
+  const {isLoaded: userLoaded, isSignedIn} = useUser();
 
-  const { data, isLoading } = api.posts.getAll.useQuery();
+  api.posts.getAll.useQuery();
 
-  if (isLoading) return <div>Loading...</div>;
+  if (!userLoaded) return <div>Nothing to see here</div>;
 
-  if (!data) return <div>Something went wrong</div>;
+  
 
   return (
     <>
@@ -61,17 +78,15 @@ const Home: NextPage = () => {
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-slate-500 text-white">
         <div>
-          {!user.isSignedIn && <SignInButton />}
-          {user.isSignedIn && (
+          {!isSignedIn && <SignInButton />}
+          {isSignedIn && (
             <>
               <CreatePostWizard />
               <SignOutButton />
             </>
           )}
         </div>
-        {[...data, ...data]?.map((fullPost) => (
-          <PostView {...fullPost} key={fullPost.post.id} />
-        ))}
+        <Feed />
       </main>
     </>
   );
