@@ -1,14 +1,56 @@
-import { SignIn, SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
+import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
+import Image from "next/image";
+
 
 import { api } from "~/utils/api";
+import type {RouterOutputs} from "~/utils/api"
+
+type PostWithUser = RouterOutputs["posts"]["getAll"][number];
+
+const PostView = (props: PostWithUser) => {
+  const { post, author } = props;
+
+  return (
+    <div className="flex" key={post.id}>
+      <span>{author.username}</span>
+      <span>{post.content}</span>
+    </div>
+  );
+};
+
+const CreatePostWizard = () => {
+  const { user } = useUser();
+
+  if (!user) return null;
+
+  return (
+    <div className="flex w-full gap-3">
+      <Image
+        src={user.profileImageUrl}
+        alt="Profile image"
+        className="h-14 w-14 rounded-full"
+        height={56}
+        width={56}
+      />
+      <input
+        type="text"
+        placeholder="Type a post"
+        className="grow bg-transparent outline-none"
+      />
+    </div>
+  );
+};
 
 const Home: NextPage = () => {
   const user = useUser();
 
-  const { data } = api.posts.getAll.useQuery();
+  const { data, isLoading } = api.posts.getAll.useQuery();
+
+  if (isLoading) return <div>Loading...</div>;
+
+  if (!data) return <div>Something went wrong</div>;
 
   return (
     <>
@@ -20,9 +62,16 @@ const Home: NextPage = () => {
       <main className="flex min-h-screen flex-col items-center justify-center bg-slate-500 text-white">
         <div>
           {!user.isSignedIn && <SignInButton />}
-          {user.isSignedIn && <SignOutButton />}
+          {user.isSignedIn && (
+            <>
+              <CreatePostWizard />
+              <SignOutButton />
+            </>
+          )}
         </div>
-        {data?.map((post) => (<div key={post.id}>{post.content}</div>))}
+        {[...data, ...data]?.map((fullPost) => (
+          <PostView {...fullPost} key={fullPost.post.id} />
+        ))}
       </main>
     </>
   );
