@@ -12,11 +12,15 @@ import type {RouterOutputs} from "~/utils/api"
 type PostWithUser = RouterOutputs["posts"]["getAll"][number];
 
 const PostView = (props: PostWithUser) => {
-  const { post } = props;
+  const { post, author } = props;
 
   return (
-    <div className="flex" key={post.id}>
-      {/* <span>{author.username}</span> */}
+    <div className="flex items-center justify-between gap-3 border-slate-300 border-2" key={post.id}>
+      <Image src={author.profileImageUrl}
+        alt="Profile image"
+        className="rounded-full"
+        height={36}
+        width={36}/>
       <span>{post.content}</span>
     </div>
   );
@@ -73,7 +77,7 @@ const CreatePostWizard = () => {
         onChange={(e)=> setInput(e.target.value)}
         disabled={isPosting}
       />
-      <button onClick={() => mutate({ content: input })}>Post</button>
+      <button className="bg-teal-300 h-[56px] w-24 rounded-3xl" onClick={() => mutate({ content: input })}>Post</button>
     </div>
   );
 };
@@ -95,16 +99,16 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-slate-500 text-white">
-        <div>
+        <div className="flex flex-col gap-6">
           {!isSignedIn && <SignInButton />}
+          <Feed />
           {isSignedIn && (
-            <>
+            <div className="flex flex-col w-full items-center gap-5">
               <CreatePostWizard />
-              <SignOutButton />
-            </>
+              <SignOutButton className="bg-red-300 h-[56px] w-24 rounded-3xl"/>
+            </div>
           )}
         </div>
-        <Feed />
       </main>
     </>
   );
