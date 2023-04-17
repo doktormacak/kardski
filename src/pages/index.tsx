@@ -2,6 +2,7 @@ import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
+import { useState } from "react";
 import { LoadingPage } from "~/components/loading";
 
 
@@ -11,11 +12,11 @@ import type {RouterOutputs} from "~/utils/api"
 type PostWithUser = RouterOutputs["posts"]["getAll"][number];
 
 const PostView = (props: PostWithUser) => {
-  const { post, author } = props;
+  const { post } = props;
 
   return (
     <div className="flex" key={post.id}>
-      <span>{author.username}</span>
+      {/* <span>{author.username}</span> */}
       <span>{post.content}</span>
     </div>
   );
@@ -30,7 +31,7 @@ const Feed = () => {
 
   return (
     <div className="flex flex-col">
-      {[...data, ...data]?.map((fullPost) => (
+      {data.map((fullPost) => (
           <PostView {...fullPost} key={fullPost.post.id} />
         ))}
     </div>
@@ -39,6 +40,19 @@ const Feed = () => {
 
 const CreatePostWizard = () => {
   const { user } = useUser();
+  
+  const [input, setInput] = useState("");
+  
+  const ctx = api.useContext();
+  
+  
+
+  const { mutate, isLoading: isPosting } = api.posts.create.useMutation({
+    onSuccess: () => {
+      setInput("");
+      void ctx.posts.getAll.invalidate();
+    }
+  });
 
   if (!user) return null;
 
@@ -55,7 +69,11 @@ const CreatePostWizard = () => {
         type="text"
         placeholder="Type a post"
         className="grow bg-transparent outline-none"
+        value={input}
+        onChange={(e)=> setInput(e.target.value)}
+        disabled={isPosting}
       />
+      <button onClick={() => mutate({ content: input })}>Post</button>
     </div>
   );
 };
