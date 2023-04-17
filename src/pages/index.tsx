@@ -105,7 +105,9 @@ const Home: NextPage = () => {
           {isSignedIn && (
             <div className="flex flex-col w-full items-center gap-5">
               <CreatePostWizard />
-              <SignOutButton className="bg-red-300 h-[56px] w-24 rounded-3xl"/>
+              <div className="flex items-center justify-center bg-red-300 h-[56px] w-24 rounded-3xl">
+                <SignOutButton />
+              </div>
             </div>
           )}
         </div>
